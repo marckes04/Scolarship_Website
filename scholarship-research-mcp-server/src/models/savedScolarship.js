@@ -13,6 +13,11 @@ const savedScholarshipSchema = new mongoose.Schema(
       enum: ["saved", "applying", "submitted", "won", "rejected"],
       default: "saved",
     },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+    },
   },
   { timestamps: true }
 );

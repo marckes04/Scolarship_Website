@@ -1,46 +1,48 @@
-import http from "node:http";
+import express from "express";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { connectDatabase } from "./db.js";
 import { config } from "./config.js";
 import { createScholarshipMcpServer } from "./mcp/server.js";
 
-const mcpServer = createScholarshipMcpServer();
-const transports = new Map();
+const app = express();
 
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+// Mapa para rastrear las sesiones activas: sessionId -> { transport, server }
+const sessions = new Map();
 
-  if (req.method === "GET" && url.pathname === "/sse") {
-    const transport = new SSEServerTransport("/messages", res);
-    transports.set(transport.sessionId, transport);
+// Endpoint SSE
+app.get("/sse", async (req, res) => {
+  // 1. Creamos una instancia fresca de McpServer para esta conexión específica
+  const server = createScholarshipMcpServer();
+  const transport = new SSEServerTransport("/messages", res);
 
-    req.on("close", () => {
-      transports.delete(transport.sessionId);
-    });
+  sessions.set(transport.sessionId, { transport, server });
 
-    await mcpServer.connect(transport);
+  req.on("close", async () => {
+    sessions.delete(transport.sessionId);
+    await server.close();
+  });
+
+  // 2. Conectamos la instancia dedicada a este transporte
+  await server.connect(transport);
+});
+
+// Endpoint POST de mensajes
+app.post("/messages", express.text({ type: "*/*" }), async (req, res) => {
+  const sessionId = req.query.sessionId;
+  const session = sessions.get(sessionId);
+
+  if (!session) {
+    res.status(404).send("Session not found");
     return;
   }
 
-  if (req.method === "POST" && url.pathname === "/messages") {
-    const sessionId = url.searchParams.get("sessionId");
-    const transport = transports.get(sessionId);
-
-    if (!transport) {
-      res.writeHead(404).end("Session not found");
-      return;
-    }
-
-    await transport.handlePostMessage(req, res);
-    return;
-  }
-
-  res.writeHead(404).end("Not Found");
+  const parsedBody = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+  await session.transport.handlePostMessage(req, res, parsedBody);
 });
 
 async function start() {
   await connectDatabase();
-  server.listen(config.port, config.host, () => {
+  app.listen(config.port, config.host, () => {
     console.log(`MCP server running at http://${config.host}:${config.port}`);
     console.log(`SSE endpoint: http://${config.host}:${config.port}/sse`);
   });
