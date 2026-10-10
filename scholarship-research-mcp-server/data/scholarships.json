@@ -1,0 +1,33 @@
+[
+  {
+    "title": "Future Engineers STEM Grant",
+    "provider": "Tech Builders Foundation",
+    "description": "Annual funding for undergraduate students pursuing engineering and computer science.",
+    "amountMin": 5000,
+    "amountMax": 10000,
+    "currency": "USD",
+    "deadline": "2027-05-01T00:00:00.000Z",
+    "rolling": false,
+    "educationLevels": ["undergraduate"],
+    "fieldsOfStudy": ["computer science", "software engineering"],
+    "gpaMinimum": 3.0,
+    "firstGenerationOnly": false,
+    "applicationUrl": "https://example.com/stem-grant",
+    "applicationRequirements": ["Transcript", "500-word essay"]
+  },
+  {
+    "title": "Global Leaders Scholarship",
+    "provider": "International Education Council",
+    "description": "Merit award open to students of any discipline demonstrating civic leadership.",
+    "amountMin": 2500,
+    "amountMax": 5000,
+    "currency": "USD",
+    "deadline": null,
+    "rolling": true,
+    "educationLevels": ["undergraduate", "graduate"],
+    "fieldsOfStudy": ["any"],
+    "gpaMinimum": 2.8,
+    "applicationUrl": "https://example.com/global-leaders",
+    "applicationRequirements": ["Resume", "Recommendation letter"]
+  }
+]
